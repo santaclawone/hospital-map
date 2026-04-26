@@ -27,7 +27,6 @@
   .filter-btn[data-type="unknown"] { border-left: 3px solid #8E8E93; }
   .filter-btn[data-type="mental"] { border-left: 3px solid #AF52DE; }
   .stat { color: #555; font-size: 10px; white-space: nowrap; }
-
   #loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #0f0f0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
   #loading.hidden { opacity: 0; pointer-events: none; }
   .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.08); border-top: 3px solid #FFD60A; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px; }
@@ -35,7 +34,6 @@
   #loading p { color: #888; font-size: 13px; }
   #loading .sub { color: #555; font-size: 11px; margin-top: 3px; }
   #loading .progress { color: #666; font-size: 11px; margin-top: 6px; font-family: monospace; }
-
   .popup { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
   .popup h3 { margin: 0 0 3px; font-size: 14px; color: #1a1a1a; max-width: 240px; }
   .popup .tag { display: inline-block; padding: 1px 7px; border-radius: 9px; font-size: 10px; font-weight: 600; color: #fff; margin: 2px 2px 0 0; }
@@ -45,20 +43,16 @@
   .tag.unknown { background: #8E8E93; }
   .tag.mental { background: #AF52DE; }
   .popup .detail { font-size: 11px; color: #666; margin-top: 1px; }
-
   #legend { position: absolute; top: 16px; right: 16px; background: rgba(20,20,20,0.9); backdrop-filter: blur(12px); border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.06); z-index: 1000; font-size: 11px; min-width: 120px; }
   #legend .item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
   #legend .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
   #title { position: absolute; top: 16px; left: 16px; z-index: 1000; }
   #title h1 { font-size: 18px; font-weight: 700; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
   #title p { font-size: 11px; color: rgba(255,255,255,0.5); }
-
   #search { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 260px; max-width: 70vw; }
   #search-input { width: 100%; padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: rgba(20,20,20,0.9); backdrop-filter: blur(12px); color: #fff; font-size: 13px; outline: none; transition: border-color 0.2s; }
   #search-input:focus { border-color: rgba(255,255,255,0.2); }
   #search-input::placeholder { color: #555; }
-
   @media (max-width: 640px) {
     #title h1 { font-size: 14px; }
     #controls { gap: 4px; padding: 6px 8px; }
@@ -73,23 +67,15 @@
 </style>
 </head>
 <body>
-
 <div id="loading">
   <div class="spinner"></div>
   <p>Loading 5,500+ hospitals worldwide...</p>
   <div class="sub">UK · Ireland · Spain · USA · Australia</div>
   <div class="progress" id="load-progress">Querying Wikidata...</div>
 </div>
-
-<div id="title">
-  <h1>🏥 Hospital Map</h1>
-  <p>Public · Non-Profit · Private</p>
-</div>
-
+<div id="title"><h1>🏥 Hospital Map</h1><p>Public · Non-Profit · Private</p></div>
 <div id="search"><input id="search-input" type="text" placeholder="Search hospitals..." /></div>
-
 <div id="map"></div>
-
 <div id="legend">
   <div class="item"><div class="dot" style="background:#FFD60A"></div> Public (government)</div>
   <div class="item"><div class="dot" style="background:#5E5CE6"></div> Non-Profit</div>
@@ -97,265 +83,170 @@
   <div class="item"><div class="dot" style="background:#8E8E93"></div> Unknown</div>
   <div class="item"><div class="dot" style="background:#AF52DE"></div> Mental health</div>
 </div>
-
 <div id="controls">
-  <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All <span id="c-all">0</span></button>
-  <button class="filter-btn" data-type="public" onclick="setFilter('public')">🟡 Public <span id="c-public">0</span></button>
-  <button class="filter-btn" data-type="nonprofit" onclick="setFilter('nonprofit')">🔵 Non-profit <span id="c-nonprofit">0</span></button>
-  <button class="filter-btn" data-type="private" onclick="setFilter('private')">🔴 Private <span id="c-private">0</span></button>
-  <button class="filter-btn" data-type="unknown" onclick="setFilter('unknown')">⚪ Unknown <span id="c-unknown">0</span></button>
-  <button class="filter-btn active" data-type="mental" onclick="togMental()">🧠 Mental <span id="c-mental">0</span></button>
+  <button class="filter-btn active" data-type="all" onclick="setF('all')">All <span id="c-all">0</span></button>
+  <button class="filter-btn" data-type="public" onclick="setF('public')">🟡 Public <span id="c-public">0</span></button>
+  <button class="filter-btn" data-type="nonprofit" onclick="setF('nonprofit')">🔵 Non-profit <span id="c-nonprofit">0</span></button>
+  <button class="filter-btn" data-type="private" onclick="setF('private')">🔴 Private <span id="c-private">0</span></button>
+  <button class="filter-btn" data-type="unknown" onclick="setF('unknown')">⚪ Unknown <span id="c-unknown">0</span></button>
+  <button class="filter-btn active" data-type="mental" onclick="togM()">🧠 Mental <span id="c-mental">0</span></button>
   <span class="stat">via Wikidata</span>
 </div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
-let map, allH = [], cluster, showM = true, curType = 'all';
+let map, allH=[], cluster, showM=true, curType='all';
+const WD='https://query.wikidata.org/sparql';
+const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408'];
+const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺'};
 
-const WD = 'https://query.wikidata.org/sparql';
-const COUNTRIES = ['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408'];
-const FLAGS = { 'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺' };
+// ── US Hospital Chain Lookup Tables ──
+// Hospital names matching these patterns → Private (for-profit)
+const US_FP_NAME = [
+  'hca ', 'tristar', 'medical city', 'lewisgale', 'coliseum health', 'coliseum medical',
+  'grand strand med', 'redmond regional', 'trident med', 'ocala health',
+  'blake med', 'fawcett memorial', 'los robles', 'parkland med', 'chippenham',
+  'johnston-willis', 'henrico doctors', 'retreat doctors', 'reston hospital',
+  'stonessprings', 'menorah med', 'overland park reg', 'raccoon creek',
+  "doctor's hospital", 'riverside community', 'north florida reg', 'south tampa',
+  'tenet', 'dmc ', 'detroit med', 'delray med', 'desert reg',
+  'palm beach gardens', 'good samaritan med ctr', 'abrazo',
+  'brookwood baptist', 'north shore med ctr (fl', "saint mary's med", "st. mary's med",
+  'prime healthcare', 'shasta reg med', 'centinela', 'vibra',
+  'universal health', 'kindred', 'encompass', 'select med', 'quorum', 'lifepoint',
+  'steward health', 'steward med', 'trihealth', 'valley health system (nv',
+  'southern hills med', 'bayhealth', 'hospital corp of america',
+  'grandview med ctr', 'heritage valley', 'mount carmel health'
+];
+// Operator names matching these → Private
+const US_FP_OP = ['hca','hospital corp','tenet','universal health services',
+  'community health sys','lifepoint','quorum','prime healthcare','steward',
+  'acadia','encompass','select medical','vibra','kindred','uspi'];
 
-// ── For-profit hospital chains (US) ──
+// Hospital names matching these → Public (government)
+const US_PUB_NAME = [
+  'veterans affairs', 'va hospital', 'va medical', 'veterans hospital',
+  'county hospital', 'county med', 'state hospital', 'state med', 'city hospital',
+  'city med', 'army med', 'navy hospital', 'navy med', 'air force', 'public health serv',
+  'indian health', 'nyc health', 'dept of veterans', 'us army', 'us navy', 'us air force',
+  'wilford hall', 'madigan', 'walter reed', 'naval med', 'tripler', 'marines',
+  'san antonio mil', 'brooke army', 'keller army', 'veterans memorial hospital',
+  'gorgas', 'st. elizabeths hospital'
+];
+
+// Hospital names matching these → Non-Profit (confirmed)
+const US_NP_NAME = [
+  'mayo clinic', 'cleveland clinic', 'johns hopkins', 'mass general', 'massachusetts general',
+  'brigham and women', 'kings county', 'bellevue hospital', 'grady memorial', 'parkland hospital',
+  'boston med ctr', 'zuckerberg', 'henry ford', 'virginia mason', 'geisinger',
+  'intermountain', 'kaleida', 'northwell', 'sutter health', 'scripps',
+  'northwestern memorial', 'university of texas', 'ut health', 'ucsf ', 'ucla ',
+  'uc irvine', 'uc davis', 'stanford hospital', 'stanford health',
+  'duke university', 'duke hospital', 'duke health', 'uw medicine', 'nyu langone',
+  'mount sinai', 'harborview', 'denver health', 'conemaugh', 'austin health',
+  'hendrick health', 'methodist hospital', 'methodist dallas', 'houston methodist',
+  'colorado mental health', 'northside hospital (atl', 'emory university',
+  'emory hospital', 'emory healthcare', 'virginia commonwealth', 'vcu med',
+  'mcv hospital', 'medstar', 'inova health', 'sentara', 'carilion',
+  'bon secours', 'trinity health', 'providence health', 'dignity health',
+  'commonspirit', 'catholic health', 'ascension', 'banner health', 'aurora health',
+  'advocate', 'northwest community', 'swedish health', 'swedish med ctr',
+  'peacehealth', 'ohsu', 'oreg health & sci', 'univ of washington',
+  'univ of michigan', 'umich health', 'univ of chicago', 'univ of penn',
+  'univ of pittsburgh', 'upmc ', 'barnes-jewish', 'barnes jewish',
+  'washington university', 'rush university', 'rush hospital',
+  'loyola university', 'lahey hospital', 'dartmouth-hitchcock',
+  'dartmouth hitchcock', 'beth israel', 'tufts med', 'baystate',
+  'albert einstein', 'montefiore', 'cook county', 'jacobi med',
+  'elfrida', 'childrens hospital', 'children\'s hospital', 'nemours',
+  'boston children', 'cincinnati children', 'philadelphia children',
+  'texas children', 'seattle children', 'childrens national',
+  'nationwide children', 'st jude', 'city of hope'
+];
+
 const FOR_PROFIT_OPS = ['hca','hospital corporation','tenet','universal health services','uhs',
   'community health systems','lifepoint','quorum','prime healthcare','steward health',
-  'acadia','encompass health','select medical','vibra','kindred','iasis','dallas county',
-  'healthsouth','surgery partners','uspi','teamhealth','emcare','mednax'];
+  'acadia','encompass health','select medical','vibra','kindred','iasis',
+  'healthsouth','surgery partners','uspi'];
 
-// ── Public hospital signals (US) ──
-const US_GOVT_NAMES = ['veterans','va hospital','va medical','county hospital','county medical',
-  'state hospital','state medical','city hospital','army medical','navy medical','air force',
-  'public health service','indian health','nyc health','department of veterans'];
+function col(t){switch(t){case'public':return'#FFD60A';case'private':return'#FF3B30';case'nonprofit':return'#5E5CE6';default:return'#8E8E93';}}
+function icon(t,m){const c=col(t);const x=m?'border:2px solid #AF52DE':`border:2px solid ${c}`;return L.divIcon({className:'',html:`<div style="width:11px;height:11px;border-radius:50%;background:${c};${x};box-shadow:0 0 5px ${c}55;"></div>`,iconSize:[11,11],iconAnchor:[6,6],popupAnchor:[0,-7]});}
+function popup(h){const f=FLAGS[h.ctry]||'';let x=`<div class="popup"><h3>${f} ${h.n}</h3><span class="tag ${h.t}">${h.t[0].toUpperCase()+h.t.slice(1)}</span>`;if(h.m)x+=` <span class="tag mental">🧠 Mental Health</span>`;if(h.op)x+=`<div class="detail">🏢 ${h.op}</div>`;if(h.ctry)x+=`<div class="detail">📍 ${h.ctry}</div>`;if(h.b)x+=`<div class="detail">🛏️ ${h.b} beds</div>`;return x+'</div>';}
 
-// ── Non-profit names (known non-profit systems) ──
-const NONPROFIT_SYS = ['mayo clinic','cleveland clinic','johns hopkins','mass general',
-  'brigham','kings county','bellevue','jacobi','elmhurst','charity hospital',
-  'grady memorial','parkland','boston medical','zuckerberg san francisco',
-  'henry ford','katherine shaw','virginia mason','geisinger','intermountain',
-  'kaleida','northwell','sutter health','scripps','kho','kessler');
-
-function col(t) {
-  switch(t) {
-    case 'public': return '#FFD60A';
-    case 'private': return '#FF3B30';
-    case 'nonprofit': return '#5E5CE6';
-    default: return '#8E8E93';
-  }
-}
-
-function icon(t, m) {
-  const c = col(t);
-  const x = m ? `border:2px solid #AF52DE` : `border:2px solid ${c}`;
-  return L.divIcon({ className:'', html:`<div style="width:11px;height:11px;border-radius:50%;background:${c};${x};box-shadow:0 0 5px ${c}55;"></div>`, iconSize:[11,11], iconAnchor:[6,6], popupAnchor:[0,-7] });
-}
-
-function popup(h) {
-  const f = FLAGS[h.ctry]||'';
-  let x = `<div class="popup"><h3>${f} ${h.n}</h3><span class="tag ${h.t}">${h.t[0].toUpperCase()+h.t.slice(1)}</span>`;
-  if (h.m) x += ` <span class="tag mental">🧠 Mental Health</span>`;
-  if (h.op) x += `<div class="detail">🏢 ${h.op}</div>`;
-  if (h.ctry) x += `<div class="detail">📍 ${h.ctry}</div>`;
-  if (h.b) x += `<div class="detail">🛏️ ${h.b} beds</div>`;
-  return x+'</div>';
-}
-
-// ── Classification (4-way) ──
+// ── Classification ──
 function cls(name, operator, country) {
-  const n = (name||'').toLowerCase();
-  const op = (operator||'').toLowerCase();
-
-  // ── Public (government-run) ──
-  // UK/Ireland/Spain/Australia: state health systems
-  if (country !== 'United States' && country !== 'Australia') {
-    // NHS/HSE/SNS countries — most hospitals are public by nature
-    if (op.includes('nhs') || op.includes('health service') || op.includes('hse') ||
-        op.includes('health board') || op.includes('trust') || op.includes('hsc') ||
-        op.includes('foundation trust') || op.includes('national health') ||
-        op.includes('servicio de salud') || op.includes('sistema nacional') ||
-        op.includes('ministry') || op.includes('government') ||
-        op.includes('department of health') || op.includes('army') ||
-        op.includes('navy') || op.includes('air force') || op.includes('military')) {
-      return 'public';
-    }
-    if (n.includes('nhs ')) return 'public';
-
-    // Irish specific
-    const iePub = ['beaumont','st. james','mater','st. vincent','tallaght',
-      'cork university','galway university','connolly','mercy university',
-      'letterkenny','sligo university','waterford university','portiuncula',
-      'mayo university','naas general','wexford general','cavan general',
-      'louth county','our lady of lourdes','st. luke','bantry','mallow',
-      'south infirmary','tipperary','midland regional','national maternity',
-      'coombe','rotunda','children\'s health ireland','temple street','crumlin'];
-    if (country === 'Ireland' && iePub.some(k => n.includes(k))) return 'public';
-
-    // Spanish — default public
-    if (country === 'Spain') return 'public';
-
-    // UK default public if name suggests it
-    if (country === 'United Kingdom' &&
-        (n.startsWith('royal ') || n.includes('royal hospital') || n.includes('royal infirmary') ||
-         n.includes('university hospital') || n.includes('teaching hospital') ||
-         n.includes('general hospital') || n.includes('district'))) return 'public';
+  const n=(name||'').toLowerCase();const op=(operator||'').toLowerCase();
+  // Non-US: NHS/HSE/SNS countries — mostly public by default
+  if(country!=='United States'&&country!=='Australia'){
+    if(op.includes('nhs')||op.includes('health service')||op.includes('hse')||op.includes('health board')||op.includes('trust')||op.includes('hsc')||op.includes('foundation trust')||op.includes('national health')||op.includes('servicio de salud')||op.includes('sistema nacional')||op.includes('ministry')||op.includes('government')||op.includes('department of health')||op.includes('army')||op.includes('navy')||op.includes('air force')||op.includes('military'))return'public';
+    if(n.includes('nhs '))return'public';
+    const iePub=['beaumont','st. james','mater','st. vincent','tallaght','cork university','galway university','connolly','mercy university','letterkenny','sligo university','waterford university','portiuncula','mayo university','naas general','wexford general','cavan general','louth county','our lady of lourdes','st. luke','bantry','mallow','south infirmary','tipperary','midland regional','national maternity','coombe','rotunda','children\'s health ireland','temple street','crumlin'];
+    if(country==='Ireland'&&iePub.some(k=>n.includes(k)))return'public';
+    if(country==='Spain')return'public';
+    if(country==='United Kingdom'&&(n.startsWith('royal ')||n.includes('royal hospital')||n.includes('royal infirmary')||n.includes('university hospital')||n.includes('teaching hospital')||n.includes('general hospital')||n.includes('district')))return'public';
   }
-
-  // ── For all countries: explicit private signals ──
-  if (op.includes('private') || op.includes('ltd') || op.includes('limited') ||
-      op.includes('plc') || op.includes('inc.') || op.includes('corporation') ||
-      FOR_PROFIT_OPS.some(f => op.includes(f)) ||
-      op === 'nuffield health' || op === 'spire healthcare' || op === 'circle health' ||
-      op === 'bmi healthcare' || op === 'ramsay health care' || op === 'quiron' ||
-      op === 'hospitales universitarios') return 'private';
-  if (n.includes('private') || n.includes('clínica')) return 'private';
-  if (country === 'United Kingdom' &&
-      (n.includes('nuffield') || n.includes('spire ') || n.includes('bmi') ||
-       n.includes('ramsay') || n.includes('circle health'))) return 'private';
-
-  // ── USA-specific classification ──
-  if (country === 'United States') {
-    // Public: government-run
-    if (US_GOVT_NAMES.some(k => n.includes(k))) return 'public';
-    if (op.includes('veterans') || op.includes('county') || op.includes('state') ||
-        op.includes('federal') || op.includes('government') || op.includes('army') ||
-        op.includes('navy') || op.includes('air force') || op.includes('united states') ||
-        op.includes('prison') || op.includes('correction') ||
-        op === 'nyc health + hospitals' || op.includes('health + hospitals')) return 'public';
-    // Private: known for-profit chains in name
-    const forProfitNames = ['hca ', 'tenet', 'universal health', 'community health systems',
-      'lifepoint', 'quorum', 'prime healthcare', 'steward', 'acadia', 'encompass',
-      'select medical', 'vibra', 'kindred', 'trihealth'];
-    if (FOR_PROFIT_OPS.some(f => n.includes(f))) return 'private';
-    if (n.includes('hca ')) return 'private';
-    if (n.endsWith(' medical center') && n.length < 20) return 'nonprofit';
-    // Default: non-profit (most US hospitals)
-    return 'nonprofit';
+  // Private operators (any country)
+  if(op.includes('private')||op.includes('ltd')||op.includes('limited')||op.includes('plc')||op.includes('inc.')||op.includes('corporation')||FOR_PROFIT_OPS.some(f=>op.includes(f))||op==='nuffield health'||op==='spire healthcare'||op==='circle health'||op==='bmi healthcare'||op==='ramsay health care'||op==='quiron'||op==='hospitales universitarios')return'private';
+  if(n.includes('private')||n.includes('clínica'))return'private';
+  if(country==='United Kingdom'&&(n.includes('nuffield')||n.includes('spire ')||n.includes('bmi')||n.includes('ramsay')||n.includes('circle health')))return'private';
+  // USA
+  if(country==='United States'){
+    if(US_PUB_NAME.some(k=>n.includes(k)))return'public';
+    if(op.includes('veterans')||op.includes('county')||op.includes('state')||op.includes('federal')||op.includes('government')||op.includes('army')||op.includes('navy')||op.includes('air force')||op.includes('united states')||op.includes('prison')||op.includes('correction')||op.includes('nyc health')||op.includes('department of')||op.includes('public health'))return'public';
+    if(US_FP_NAME.some(k=>n.includes(k)))return'private';
+    if(US_FP_OP.some(f=>op.includes(f)))return'private';
+    if(US_NP_NAME.some(k=>n.includes(k)))return'nonprofit';
+    return'nonprofit';
   }
-
-  // ── Australia ──
-  if (country === 'Australia') {
-    if (n.startsWith('royal') || n.includes('hospital') || n.includes('health service') ||
-        n.includes('prince') || n.startsWith('st ')) return 'public';
-    if (n.includes('private')) return 'private';
-    return 'public';
+  // Australia
+  if(country==='Australia'){
+    if(n.startsWith('royal')||n.includes('hospital')||n.includes('health service')||n.includes('prince')||n.startsWith('st '))return'public';
+    if(n.includes('private'))return'private';return'public';
   }
-
-  // ── UK fallback ──
-  if (country === 'United Kingdom') {
-    if (n.includes('private')) return 'private';
-    return 'public';  // NHS default
-  }
-
-  return 'unknown';
+  if(country==='United Kingdom'){if(n.includes('private'))return'private';return'public';}
+  return'unknown';
 }
-
-function mental(n) {
-  const k = ['psychiatric','mental health','psychiatry','mental hospital','psiquiátrico',
-    'salud mental','behavioural health','behavioral health','psychiatric hospital'];
-  return k.some(s => (n||'').toLowerCase().includes(s));
-}
+function mental(n){const k=['psychiatric','mental health','psychiatry','mental hospital','psiquiátrico','salud mental','behavioural health','behavioral health','psychiatric hospital'];return k.some(s=>n.toLowerCase().includes(s));}
 
 // ── Fetch ──
-function fetchH() {
-  const cl = COUNTRIES.join(', ');
-  const q = `SELECT ?h ?hLabel ?coord ?opLabel ?cLabel ?beds WHERE {
+function fetchH(){
+  const cl=COUNTRIES.join(', ');
+  const q=`SELECT ?h ?hLabel ?coord ?opLabel ?cLabel ?beds WHERE {
   ?h wdt:P31 wd:Q16917; wdt:P625 ?coord; wdt:P17 ?c.
   FILTER(?c IN (${cl})) OPTIONAL { ?h wdt:P137 ?op. } OPTIONAL { ?h wdt:P1313 ?beds. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 10000`;
-
-  document.getElementById('load-progress').textContent = 'Querying Wikidata...';
-  fetch(WD+'?format=json&query='+encodeURIComponent(q), { headers:{'Accept':'application/json','User-Agent':'HM/1.0'} })
-    .then(r => r.json())
-    .then(d => {
-      let parsed = d.results.bindings.map(b => {
-        const m = b.coord.value.match(/Point\(([\d.-]+)\s+([\d.-]+)\)/);
-        if (!m) return null;
-        const [lon, lat] = [parseFloat(m[1]), parseFloat(m[2])];
-        if (isNaN(lat)||isNaN(lon)) return null;
-        const name = b.hLabel.value;
-        const op = b.opLabel ? b.opLabel.value : '';
-        const ctry = b.cLabel.value;
-        return { n:name, lat, lng:lon, t:cls(name,op,ctry), m:mental(name), op, b:b.beds?parseInt(b.beds.value):0, ctry };
+  document.getElementById('load-progress').textContent='Querying Wikidata...';
+  fetch(WD+'?format=json&query='+encodeURIComponent(q),{headers:{'Accept':'application/json','User-Agent':'HM/1.0'}})
+    .then(r=>r.json()).then(d=>{
+      const parsed=d.results.bindings.map(b=>{
+        const m=b.coord.value.match(/Point\(([\d.-]+)\s+([\d.-]+)\)/);if(!m)return null;
+        const [lon,lat]=[parseFloat(m[1]),parseFloat(m[2])];if(isNaN(lat)||isNaN(lon))return null;
+        const name=b.hLabel.value,op=b.opLabel?b.opLabel.value:'',ctry=b.cLabel.value;
+        return{n:name,lat,lng:lon,t:cls(name,op,ctry),m:mental(name),op,b:b.beds?parseInt(b.beds.value):0,ctry};
       }).filter(Boolean);
-
-      allH = parsed;
-      const byC = {}; parsed.forEach(h => { byC[h.ctry]=(byC[h.ctry]||0)+1; });
-      document.getElementById('load-progress').textContent = Object.entries(byC).map(([c,n])=>`${FLAGS[c]||c} ${n}`).join(' · ');
-      setTimeout(() => { document.getElementById('loading').classList.add('hidden'); render(); }, 400);
-    })
-    .catch(e => { document.getElementById('load-progress').textContent = '⚠ '+e.message; });
+      allH=parsed;
+      const byC={};parsed.forEach(h=>{byC[h.ctry]=(byC[h.ctry]||0)+1;});
+      // Count types per US
+      const usT={public:0,private:0,nonprofit:0};parsed.filter(h=>h.ctry==='United States').forEach(h=>{usT[h.t]++;});
+      document.getElementById('load-progress').textContent=Object.entries(byC).map(([c,n])=>`${FLAGS[c]||c} ${n}`).join(' · ')+` | US: Pub ${usT.public} Pri ${usT.private} NP ${usT.nonprofit}`;
+      setTimeout(()=>{document.getElementById('loading').classList.add('hidden');render();},400);
+    }).catch(e=>{document.getElementById('load-progress').textContent='⚠ '+e.message;});
 }
 
 // ── Map ──
-function init() {
-  map = L.map('map', { center:[28,-30], zoom:3, minZoom:2, worldCopyJump:true, zoomControl:false });
+function init(){
+  map=L.map('map',{center:[28,-30],zoom:3,minZoom:2,worldCopyJump:true,zoomControl:false});
   L.control.zoom({position:'bottomright'}).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains:'abcd', maxZoom:19 }).addTo(map);
-  cluster = L.markerClusterGroup({
-    chunkedLoading:true, maxClusterRadius:55, spiderfyOnMaxZoom:true, disableClusteringAtZoom:15,
-    iconCreateFunction:function(c){
-      const n = c.getChildCount(), r = Math.min(42, 22 + Math.min(n,25)*0.8);
-      return L.divIcon({
-        html:`<div style="background:rgba(255,214,10,0.12);border:2px solid rgba(255,214,10,0.4);border-radius:50%;width:${r}px;height:${r}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:${n>99?9:11}px;backdrop-filter:blur(4px);">${n}</div>`,
-        className:'', iconSize:[r,r] });
-    }
-  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href=\"https://www.openstreetmap.org/copyright\">OSM</a> &copy; <a href=\"https://carto.com/\">CARTO</a>',subdomains:'abcd',maxZoom:19}).addTo(map);
+  cluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,spiderfyOnMaxZoom:true,disableClusteringAtZoom:15,iconCreateFunction:function(c){const n=c.getChildCount(),r=Math.min(40,20+Math.min(n,25)*0.8);return L.divIcon({html:`<div style="background:rgba(255,214,10,0.1);border:2px solid rgba(255,214,10,0.35);border-radius:50%;width:${r}px;height:${r}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:${n>99?9:11}px;backdrop-filter:blur(4px);">${n}</div>`,className:'',iconSize:[r,r]});}});
   map.addLayer(cluster);
 }
-
-function render() {
-  const cnt = { public:0, private:0, nonprofit:0, unknown:0, mental:0 };
-  allH.forEach(h => { cnt[h.t]++; if (h.m) cnt.mental++; });
-  document.getElementById('c-all').textContent = allH.length;
-  document.getElementById('c-public').textContent = cnt.public;
-  document.getElementById('c-private').textContent = cnt.private;
-  document.getElementById('c-nonprofit').textContent = cnt.nonprofit;
-  document.getElementById('c-unknown').textContent = cnt.unknown;
-  document.getElementById('c-mental').textContent = cnt.mental;
-  apply();
-}
-
-function apply() {
-  cluster.clearLayers();
-  allH.forEach(h => {
-    if (curType !== 'all' && h.t !== curType) return;
-    if (!showM && h.m) return;
-    const m = L.marker([h.lat, h.lng], { icon:icon(h.t,h.m) });
-    m.bindPopup(popup(h));
-    cluster.addLayer(m);
-  });
-}
-
-function setFilter(t) {
-  curType = t;
-  document.querySelectorAll('.filter-btn[data-type]').forEach(b => {
-    if (b.dataset.type === t) b.classList.add('active');
-    else if (b.dataset.type !== 'mental') b.classList.remove('active');
-  });
-  apply();
-}
-
-function togMental() {
-  showM = !showM;
-  document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');
-  apply();
-}
-
-document.getElementById('search-input').addEventListener('input', function() {
-  const q = this.value.toLowerCase().trim();
-  if (!q) { apply(); return; }
-  cluster.clearLayers();
-  allH.filter(h => h.n.toLowerCase().includes(q)).forEach(h => {
-    const m = L.marker([h.lat, h.lng], { icon:icon(h.t,h.m) });
-    m.bindPopup(popup(h));
-    cluster.addLayer(m);
-  });
-});
-
-init();
-fetchH();
+function render(){const cnt={public:0,private:0,nonprofit:0,unknown:0,mental:0};allH.forEach(h=>{cnt[h.t]++;if(h.m)cnt.mental++;});document.getElementById('c-all').textContent=allH.length;document.getElementById('c-public').textContent=cnt.public;document.getElementById('c-private').textContent=cnt.private;document.getElementById('c-nonprofit').textContent=cnt.nonprofit;document.getElementById('c-unknown').textContent=cnt.unknown;document.getElementById('c-mental').textContent=cnt.mental;apply();}
+function apply(){cluster.clearLayers();allH.forEach(h=>{if(curType!=='all'&&h.t!==curType)return;if(!showM&&h.m)return;const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));cluster.addLayer(m);});}
+function setF(t){curType=t;document.querySelectorAll('.filter-btn[data-type]').forEach(b=>{if(b.dataset.type===t)b.classList.add('active');else if(b.dataset.type!=='mental')b.classList.remove('active');});apply();}
+function togM(){showM=!showM;document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');apply();}
+document.getElementById('search-input').addEventListener('input',function(){const q=this.value.toLowerCase().trim();if(!q){apply();return;}cluster.clearLayers();allH.filter(h=>h.n.toLowerCase().includes(q)).forEach(h=>{const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));cluster.addLayer(m);});});
+init();fetchH();
 </script>
 </body>
 </html>
