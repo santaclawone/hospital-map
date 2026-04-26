@@ -70,7 +70,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p>Loading 5,500+ hospitals worldwide...</p>
-  <div class="sub">UK · Ireland · Spain · USA · Australia</div>
+  <div class="sub">UK · Ireland · Spain · France · Germany · Portugal · USA · Australia · Chile</div>
   <div class="progress" id="load-progress">Querying Wikidata...</div>
 </div>
 <div id="title"><h1>🏥 Hospital Map</h1><p>Public · Non-Profit · Private</p></div>
@@ -90,15 +90,15 @@
   <button class="filter-btn" data-type="private" onclick="setF('private')">🔴 Private <span id="c-private">0</span></button>
   <button class="filter-btn" data-type="unknown" onclick="setF('unknown')">⚪ Unknown <span id="c-unknown">0</span></button>
   <button class="filter-btn active" data-type="mental" onclick="togM()">🧠 Mental <span id="c-mental">0</span></button>
-  <span class="stat">via Wikidata</span>
+  <span class="stat">via Wikidata · Data quality ⚠ name-based</span>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 let map, allH=[], cluster, showM=true, curType='all';
 const WD='https://query.wikidata.org/sparql';
-const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408'];
-const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺'};
+const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408','wd:Q142','wd:Q183','wd:Q45','wd:Q298'];
+const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺','France':'🇫🇷','Germany':'🇩🇪','Portugal':'🇵🇹','Chile':'🇨🇱'};
 
 // ── US Hospital Chain Lookup Tables ──
 // Hospital names matching these patterns → Private (for-profit)
@@ -175,6 +175,20 @@ const IE_PRIVATE=['bon secours','blackrock clinic','beacon hospital','hermitage 
 // ── UK Private/Independent Hospital Names ──
 const UK_PRIVATE=['wellington hospital','london bridge hospital','cromwell hospital','king edward vii','portland hospital','london clinic','princess grace','st anthonys','st. anthony\'s','rivers hospital','hospital of st john','nightingale hospital marylebone','albyn hospital','carrick glen','fernbrae','kings park hospital stirling','murrayfield hospital','ross hall hospital','ulster independent clinic','fitzwilliam clinic','hillsborough clinic'];
 
+// ── France Private/Public Patterns ──
+const FR_PRIVATE_OP=['elsan','ramsay sante','ramsay santé','capio','vivalto','générale de santé','groupe hospitalier privé','vedici','almaviva santé','orpea','korian'];
+
+// ── Germany Private/Public Patterns ──
+const DE_PRIVATE_OP=['helios','asklepios','sana k','rhoen k','rhön k','paracelsus','schön k','artemed','damp','median k','privathaus','privathospital','fachklinik furth'];
+const DE_PRIVATE=['helios','asklepios','sana k','rhoen k','rhön k','paracelsus','schön k','artemed','damp','median k','privathaus','privathospital'];
+
+// ── Chile Private/Public Patterns ──
+const CL_PRIVATE_OP=['bupa','redsalud','clinica alemana','clínica alemana','banmédica','vidaintegra','cruz blanca','cruz verde','consalud','megalabs'];
+
+// ── Portugal Private/Public Patterns ──
+const PT_PRIVATE_OP=['luz saude','luz saúde','lusíadas','lusíadas','trofa saude','trofa saúde','grupo hpa','hospital particular'];
+const PT_PRIVATE=['cuf '] // CUF is unmistakably private in Portugal
+
 function col(t){switch(t){case'public':return'#FFD60A';case'private':return'#FF3B30';case'nonprofit':return'#5E5CE6';default:return'#8E8E93';}}
 function icon(t,m){const c=col(t);const x=m?'border:2px solid #AF52DE':`border:2px solid ${c}`;return L.divIcon({className:'',html:`<div style="width:11px;height:11px;border-radius:50%;background:${c};${x};box-shadow:0 0 5px ${c}55;"></div>`,iconSize:[11,11],iconAnchor:[6,6],popupAnchor:[0,-7]});}
 function popup(h){const f=FLAGS[h.ctry]||'';let x=`<div class="popup"><h3>${f} ${h.n}</h3><span class="tag ${h.t}">${h.t[0].toUpperCase()+h.t.slice(1)}</span>`;if(h.m)x+=` <span class="tag mental">🧠 Mental Health</span>`;if(h.op)x+=`<div class="detail">🏢 ${h.op}</div>`;if(h.ctry)x+=`<div class="detail">📍 ${h.ctry}</div>`;if(h.b)x+=`<div class="detail">🛏️ ${h.b} beds</div>`;return x+'</div>';}
@@ -192,9 +206,29 @@ function cls(name, operator, country) {
     if(country==='Spain')return'public';
     if(country==='United Kingdom'&&(n.startsWith('royal ')||n.includes('royal hospital')||n.includes('royal infirmary')||n.includes('university hospital')||n.includes('teaching hospital')||n.includes('general hospital')||n.includes('district')))return'public';
     if(country==='United Kingdom'&&UK_PRIVATE.some(k=>n.includes(k)))return'private';
+    // France
+    if(country==='France'){
+      if(n.includes('chu ')||n.includes('centre hospitalier')||n.includes('chru ')||n.includes('assistance publique')||n.includes('ap-hp')||n.includes('hopital public')||n.includes('hôpital public'))return'public';
+      if(n.includes('clinique')||n.includes('polyclinique')||n.includes('hôpital privé')||n.includes('hopital prive'))return'private';
+    }
+    // Germany
+    if(country==='Germany'){
+      if(n.includes('universitätsklinikum')||n.includes('universitaetsklinikum')||n.includes('univ.-klinikum')||n.includes('st. johannes')||n.includes('marienhospital')||n.includes('evangelisches')||n.includes('katholisches'))return'public';
+      if(DE_PRIVATE.some(k=>n.includes(k)))return'private';
+    }
+    // Portugal
+    if(country==='Portugal'){
+      if(n.includes('centro hospitalar')||n.includes('hospital distrital')||n.includes('hospital de são')||n.includes('hospital de s.')||n.includes('unidade local')||n.includes('instituto português'))return'public';
+      if(PT_PRIVATE.some(k=>n.includes(k)))return'private';
+    }
+    // Chile
+    if(country==='Chile'){
+      if(n.includes('hospital clínico')||n.includes('hospital regional')||n.includes('servicio de salud')||n.includes('hospital de niños')||n.includes('hospital de la fuerza')||n.includes('hospital militar')||n.includes('hospital naval')||n.includes('hospital de carabineros'))return'public';
+      if(n.includes('clínica')||n.includes('clinica alemana')||n.includes('clinica las condes'))return'private';
+    }
   }
   // Private operators (any country)
-  if(op.includes('private')||op.includes('ltd')||op.includes('limited')||op.includes('plc')||op.includes('inc.')||op.includes('corporation')||FOR_PROFIT_OPS.some(f=>op.includes(f))||op==='nuffield health'||op==='spire healthcare'||op==='circle health'||op==='bmi healthcare'||op==='ramsay health care'||op==='quiron'||op==='hospitales universitarios')return'private';
+  if(op.includes('private')||op.includes('ltd')||op.includes('limited')||op.includes('plc')||op.includes('inc.')||op.includes('corporation')||FOR_PROFIT_OPS.some(f=>op.includes(f))||op==='nuffield health'||op==='spire healthcare'||op==='circle health'||op==='bmi healthcare'||op==='ramsay health care'||op==='quiron'||op==='hospitales universitarios'||FR_PRIVATE_OP.some(k=>op.includes(k))||DE_PRIVATE_OP.some(k=>op.includes(k))||CL_PRIVATE_OP.some(k=>op.includes(k))||PT_PRIVATE_OP.some(k=>op.includes(k)))return'private';
   if(n.includes('private')||n.includes('clínica'))return'private';
   if(country==='United Kingdom'&&(n.includes('nuffield')||n.includes('spire ')||n.includes('bmi')||n.includes('ramsay')||n.includes('circle health')||n.includes('priory')))return'private';
   // USA
@@ -212,6 +246,10 @@ function cls(name, operator, country) {
     if(n.includes('private'))return'private';return'public';
   }
   if(country==='United Kingdom'){if(n.includes('private'))return'private';return'public';}
+  if(country==='France'){if(n.includes('clinique'))return'private';return'public';}
+  if(country==='Germany'){if(DE_PRIVATE.some(k=>n.includes(k)))return'private';return'public';}
+  if(country==='Portugal'){if(PT_PRIVATE.some(k=>n.includes(k)))return'private';return'public';}
+  if(country==='Chile'){if(n.includes('clínica'))return'private';return'public';}
   return'unknown';
 }
 function mental(n){const k=['psychiatric','mental health','psychiatry','mental hospital','psiquiátrico','salud mental','behavioural health','behavioral health','psychiatric hospital'];return k.some(s=>n.toLowerCase().includes(s));}
@@ -222,7 +260,7 @@ function fetchH(){
   const q=`SELECT ?h ?hLabel ?coord ?opLabel ?cLabel ?beds WHERE {
   ?h wdt:P31 wd:Q16917; wdt:P625 ?coord; wdt:P17 ?c.
   FILTER(?c IN (${cl})) OPTIONAL { ?h wdt:P137 ?op. } OPTIONAL { ?h wdt:P1313 ?beds. }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 10000`;
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 20000`;
   document.getElementById('load-progress').textContent='Querying Wikidata...';
   fetch(WD+'?format=json&query='+encodeURIComponent(q),{headers:{'Accept':'application/json','User-Agent':'HM/1.0'}})
     .then(r=>r.json()).then(d=>{
@@ -234,9 +272,7 @@ function fetchH(){
       }).filter(Boolean);
       allH=parsed;
       const byC={};parsed.forEach(h=>{byC[h.ctry]=(byC[h.ctry]||0)+1;});
-      // Count types per US
-      const usT={public:0,private:0,nonprofit:0};parsed.filter(h=>h.ctry==='United States').forEach(h=>{usT[h.t]++;});
-      document.getElementById('load-progress').textContent=Object.entries(byC).map(([c,n])=>`${FLAGS[c]||c} ${n}`).join(' · ')+` | US: Pub ${usT.public} Pri ${usT.private} NP ${usT.nonprofit}`;
+      document.getElementById('load-progress').textContent=Object.entries(byC).map(([c,n])=>`${FLAGS[c]||c} ${n}`).join(' · ');
       setTimeout(()=>{document.getElementById('loading').classList.add('hidden');render();},400);
     }).catch(e=>{document.getElementById('load-progress').textContent='⚠ '+e.message;});
 }
