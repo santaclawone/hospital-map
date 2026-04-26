@@ -93,6 +93,7 @@
   <div class="item"><div class="dot" style="background:#34C759"></div> Public</div>
   <div class="item"><div class="dot" style="background:#FF3B30"></div> Private</div>
   <div class="item"><div class="dot" style="background:#8E8E93"></div> Unknown</div>
+  <div class="item"><div class="dot" style="background:#AF52DE"></div> Mental health</div>
 </div>
 
 <div id="controls">
@@ -100,6 +101,7 @@
   <button class="filter-btn active" data-type="public" onclick="filterHospitals('public')">🟢 Public <span id="count-public">0</span></button>
   <button class="filter-btn active" data-type="private" onclick="filterHospitals('private')">🔴 Private <span id="count-private">0</span></button>
   <button class="filter-btn active" data-type="unknown" onclick="filterHospitals('unknown')">⚪ Unknown <span id="count-unknown">0</span></button>
+  <button class="filter-btn active" data-type="mental" onclick="toggleMental()" style="border-left:3px solid #AF52DE">🧠 Mental health <span id="count-mental">0</span></button>
   <span class="stat">Source: <span>OpenStreetMap</span></span>
 </div>
 
@@ -120,14 +122,35 @@ function getColor(type) {
   }
 }
 
+function isMentalHealth(tags) {
+  const name = (tags.name || '').toLowerCase();
+  const speciality = (tags['healthcare:speciality'] || tags.healthcare_speciality || '').toLowerCase();
+  const desc = Object.values(tags).join(' ').toLowerCase();
+  const keywords = ['psychiatric', 'mental', 'psychiatry', 'mental health', 'psychiatric hospital', 'psychiatric unit', 'mental hospital'];
+  return keywords.some(k => name.includes(k) || speciality.includes(k) || desc.includes(k));
+}
+
 function classifyHospital(tags) {
-  const t = tags['operator:type'] || tags.operator || '';
+  const t = tags['operator:type'] || '';
   const op = (tags.operator || '').toLowerCase();
   const name = (tags.name || '').toLowerCase();
   
-  if (t === 'public' || t === 'government' || op.includes('nhs') || op.includes('health service') || op.includes('hse') || op.includes('trust') || name.includes('nhs ')) return 'public';
-  if (t === 'private' || t === 'for-profit' || op.includes('private') || op.includes('ltd') || op.includes('limited') || name.includes('private')) return 'private';
+  // Known Irish public hospitals (non-NHS naming)
+  const iePublic = ['beaumont hospital', 'st james', 'mater misericordiae', 'st. vincent', 'tallaght', 'the children', 'our lady\'s', 'cork university', 'galway university', 'university hospital', 'connolly hospital', 'mercy university', 'letterkenny', 'sligo university', 'waterford university', 'midland regional', 'portiuncula', 'mayo university', 'naas general', 'wexford general', 'cavan general', 'louth county', 'our lady of lourdes', 'st luke\'s', 'st columcille', 'st michael\'s', 'bantry general', 'mallow general', 'south infimary', 'st john\'s', 'tipperary university', 'northampton general'];
+  
+  if (t === 'public' || t === 'government') return 'public';
+  if (t === 'private' || t === 'for-profit') return 'private';
   if (t === 'philanthropic' || t === 'non-profit' || t === 'religious') return 'public';
+  
+  // Operator-based
+  if (op.includes('nhs') || op.includes('health service') || op.includes('hse') || op.includes('trust') || op.includes('health board')) return 'public';
+  if (op.includes('private') || op.includes('ltd') || op.includes('limited') || op.includes('plc')) return 'private';
+  
+  // Name-based
+  if (name.includes('nhs ')) return 'public';
+  if (name.includes('private')) return 'private';
+  if (iePublic.some(k => name.includes(k))) return 'public';
+  
   return 'unknown';
 }
 
@@ -178,7 +201,8 @@ function initMap() {
 }
 
 function fetchHospitals() {
-  const query = `[out:json][timeout:300];
+  // Broader query: amenity=hospital + healthcare=hospital/centre + amenity=clinic with healthcare tags
+  const query = `[out:json][timeout:300][maxsize:1073741824];
 (
   area["ISO3166-1"="GB"][admin_level=2];
   area["ISO3166-1"="IE"][admin_level=2];
@@ -187,8 +211,11 @@ function fetchHospitals() {
   node(area)["amenity"="hospital"];
   way(area)["amenity"="hospital"];
   relation(area)["amenity"="hospital"];
+  node(area)["healthcare"="hospital"];
+  way(area)["healthcare"="hospital"];
+  relation(area)["healthcare"="hospital"];
 );
-out center 2000;`;
+out center 4000;`;
 
   fetch(OVERPASS_URL, {
     method: 'POST',
@@ -213,19 +240,25 @@ function processHospitals(elements) {
     const tags = el.tags || {};
     if (!tags.name || tags.name === 'Hospital') return;
 
+    // Skip generic healthcare centres unless they have a real name
+    if (tags.healthcare === 'centre' || tags.healthcare === 'clinic') {
+      if (!tags.operator && tags.name.length < 8) return;
+    }
+
     // Get coords
     let lat, lng;
     if (el.type === 'node') { lat = el.lat; lng = el.lon; }
     else if (el.center) { lat = el.center.lat; lng = el.center.lon; }
     else return;
 
-    // Deduplicate by name+coords
-    const key = (tags.name + lat.toFixed(3) + lng.toFixed(3));
+    // Deduplicate by name+coords (relaxed precision to catch nearby duplicates)
+    const key = (tags.name + lat.toFixed(2) + lng.toFixed(2));
     if (seen.has(key)) return;
     seen.add(key);
 
     const type = classifyHospital(tags);
-    allHospitals.push({ name: tags.name, lat, lng, type, tags });
+    const mental = isMentalHealth(tags);
+    allHospitals.push({ name: tags.name, lat, lng, type, tags, mental });
   });
 
   renderAll();
@@ -235,28 +268,65 @@ function renderAll() {
   markerCluster.clearLayers();
   document.getElementById('count-all').textContent = allHospitals.length;
 
-  const counts = { public: 0, private: 0, unknown: 0 };
+  const counts = { public: 0, private: 0, unknown: 0, mental: 0 };
   
   allHospitals.forEach(h => {
     counts[h.type]++;
-    const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type) });
-    marker.hospitalData = h;
-    
-    marker.bindPopup(`
-      <div class="hospital-popup">
-        <h3>${h.name}</h3>
-        <span class="tag ${h.type}">${h.type.charAt(0).toUpperCase() + h.type.slice(1)}</span>
-        ${h.tags.operator ? `<div class="detail">${h.tags.operator}</div>` : ''}
-        <div class="detail">${h.lat.toFixed(4)}, ${h.lng.toFixed(4)}</div>
-      </div>
-    `);
-    
-    markerCluster.addLayer(marker);
+    if (h.mental) counts.mental++;
   });
 
   document.getElementById('count-public').textContent = counts.public;
   document.getElementById('count-private').textContent = counts.private;
   document.getElementById('count-unknown').textContent = counts.unknown;
+  document.getElementById('count-mental').textContent = counts.mental;
+  
+  applyFilters();
+}
+
+let showMental = true;
+
+function toggleMental() {
+  showMental = !showMental;
+  document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const activeTypes = [];
+  document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+    if (btn.classList.contains('active')) activeTypes.push(btn.dataset.type);
+  });
+
+  markerCluster.clearLayers();
+  
+  allHospitals.forEach(h => {
+    if (!showMental && h.mental) return;
+    const show = activeTypes.includes('all') || activeTypes.includes(h.type);
+    if (show) {
+      const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type) });
+      
+      let popupContent = `<div class="hospital-popup"><h3>${h.name}</h3>`;
+      popupContent += `<span class="tag ${h.type}">${h.type.charAt(0).toUpperCase() + h.type.slice(1)}</span>`;
+      if (h.mental) popupContent += ` <span class="tag" style="background:#AF52DE">Mental Health</span>`;
+      if (h.tags.operator) popupContent += `<div class="detail">${h.tags.operator}</div>`;
+      if (h.tags['healthcare:speciality']) popupContent += `<div class="detail">${h.tags['healthcare:speciality']}</div>`;
+      if (h.tags.beds) popupContent += `<div class="detail">${h.tags.beds} beds</div>`;
+      popupContent += `</div>`;
+      
+      marker.bindPopup(popupContent);
+      markerCluster.addLayer(marker);
+    }
+  });
+}
+
+function filterHospitals(type) {
+  const btns = document.querySelectorAll('.filter-btn[data-type]');
+  btns.forEach(btn => {
+    if (btn.dataset.type === type) {
+      btn.classList.toggle('active');
+    }
+  });
+  applyFilters();
 }
 
 function filterHospitals(type) {
@@ -298,7 +368,7 @@ document.getElementById('search-input').addEventListener('input', function() {
   
   if (!q) {
     document.querySelectorAll('.filter-btn[data-type]').forEach(b => b.classList.add('active'));
-    filterHospitals('all');
+    applyFilters();
     return;
   }
 
@@ -306,13 +376,14 @@ document.getElementById('search-input').addEventListener('input', function() {
   
   allHospitals.filter(h => h.name.toLowerCase().includes(q)).forEach(h => {
     const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type) });
-    marker.bindPopup(`
-      <div class="hospital-popup">
-        <h3>${h.name}</h3>
-        <span class="tag ${h.type}">${h.type.charAt(0).toUpperCase() + h.type.slice(1)}</span>
-        ${h.tags.operator ? `<div class="detail">${h.tags.operator}</div>` : ''}
-      </div>
-    `);
+    
+    let popupContent = `<div class="hospital-popup"><h3>${h.name}</h3>`;
+    popupContent += `<span class="tag ${h.type}">${h.type.charAt(0).toUpperCase() + h.type.slice(1)}</span>`;
+    if (h.mental) popupContent += ` <span class="tag" style="background:#AF52DE">Mental Health</span>`;
+    if (h.tags.operator) popupContent += `<div class="detail">${h.tags.operator}</div>`;
+    popupContent += `</div>`;
+    
+    marker.bindPopup(popupContent);
     markerCluster.addLayer(marker);
   });
 });
