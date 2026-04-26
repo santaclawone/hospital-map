@@ -70,7 +70,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p>Loading 5,500+ hospitals worldwide...</p>
-  <div class="sub">UK · Ireland · Spain · France · Germany · Italy · Switzerland · Portugal · Netherlands · Canada · USA · Australia · Chile</div>
+  <div class="sub">UK · Ireland · Spain · France · Germany · Italy · Switzerland · Portugal · Netherlands · Canada · Sweden · Norway · USA · Australia · Chile · Japan</div>
   <div class="progress" id="load-progress">Querying Wikidata...</div>
 </div>
 <div id="title"><h1>🏥 Hospital Map</h1><p>Public · Non-Profit · Private</p></div>
@@ -96,10 +96,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
-let map, allH=[], cluster, flatGroup, showM=true, curType='all', clustered=true;
+let map, allH=[], cluster, dotsCluster, showM=true, curType='all', clustered=true;
 const WD='https://query.wikidata.org/sparql';
-const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408','wd:Q142','wd:Q183','wd:Q45','wd:Q298'];
-const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺','France':'🇫🇷','Germany':'🇩🇪','Portugal':'🇵🇹','Chile':'🇨🇱'};
+const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408','wd:Q142','wd:Q183','wd:Q45','wd:Q298','wd:Q34','wd:Q20','wd:Q17'];
+const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺','France':'🇫🇷','Germany':'🇩🇪','Portugal':'🇵🇹','Chile':'🇨🇱','Sweden':'🇸🇪','Norway':'🇳🇴','Japan':'🇯🇵'};
 
 // ── US Hospital Chain Lookup Tables ──
 // Hospital names matching these patterns → Private (for-profit)
@@ -227,6 +227,13 @@ function cls(name, operator, country) {
       if(n.includes('hospital clínico')||n.includes('hospital regional')||n.includes('servicio de salud')||n.includes('hospital de niños')||n.includes('hospital de la fuerza')||n.includes('hospital militar')||n.includes('hospital naval')||n.includes('hospital de carabineros'))return'public';
       if(n.includes('clínica')||n.includes('clinica alemana')||n.includes('clinica las condes'))return'private';
     }
+    // Sweden — region operators = public
+    if(country==='Sweden'&&(op.includes('region ')||op.includes('landsting')||op.includes('region stockholm')||op.includes('region skåne')||op.includes('region västra')||op.includes('region vastra')))return'public';
+    // Norway — helse operators = public
+    if(country==='Norway'&&(op.includes('helse')||op.includes('helseforetak')||op.includes('helseregion')))return'public';
+    // Japan — national/university operators = public; medical corporation = private
+    if(country==='Japan'&&(op.includes('national hospital')||op.includes('university ')||op.includes('government')||op.includes('prefecture')||op.includes('ministry of')||op.includes('red cross')||op.includes('social insurance')||op.includes('saiseikai')))return'public';
+    if(country==='Japan'&&(op.includes('medical corporation')||op.includes('byouin')))return'private';
     // Canada — provincial health authorities run most
     if(country==='Canada'&&(op.includes('health authority')||op.includes('health region')||op.includes('santé')||op.includes('alberta health services')||op.includes('ontario health')||op.includes('quebec ministry')))return'public';
     // Netherlands — UMC/STZ = public academic
@@ -263,6 +270,9 @@ function cls(name, operator, country) {
   if(country==='Netherlands'){if(n.includes('privé')||n.includes('particulier'))return'private';return'public';}
   if(country==='Italy'){if(n.includes('humanitas')||n.includes('san raffaele')||n.includes('san donato')||n.includes('galeazzi'))return'private';return'public';}
   if(country==='Switzerland'){if(n.includes('privatklinik')||n.includes('hirslanden'))return'private';return'public';}
+  if(country==='Sweden'){if(n.includes('privatklinik')||n.includes('privat ')||n.includes('privat-')||n.includes('citykliniken'))return'private';return'public';}
+  if(country==='Norway'){if(n.includes('privat')||n.includes('volvat')||n.includes('aleris'))return'private';return'public';}
+  if(country==='Japan'){if(n.includes('university hospital')||n.includes('national hospital')||n.includes('red cross')||n.includes('national center')||n.includes('university')||n.includes('national')||n.includes('medical center'))return'public';if(op.includes('medical corporation')||op.includes('byouin')||n.includes('clinic'))return'private';return'public';}
   return'unknown';
 }
 function mental(n){const k=['psychiatric','mental health','psychiatry','mental hospital','psiquiátrico','salud mental','behavioural health','behavioral health','psychiatric hospital'];return k.some(s=>n.toLowerCase().includes(s));}
@@ -297,14 +307,14 @@ function init(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href=\"https://www.openstreetmap.org/copyright\">OSM</a> &copy; <a href=\"https://carto.com/\">CARTO</a>',subdomains:'abcd',maxZoom:19}).addTo(map);
   cluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,spiderfyOnMaxZoom:true,disableClusteringAtZoom:15,iconCreateFunction:function(c){const n=c.getChildCount(),r=Math.min(40,20+Math.min(n,25)*0.8);return L.divIcon({html:`<div style="background:rgba(255,214,10,0.1);border:2px solid rgba(255,214,10,0.35);border-radius:50%;width:${r}px;height:${r}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:${n>99?9:11}px;backdrop-filter:blur(4px);">${n}</div>`,className:'',iconSize:[r,r]});}});
   map.addLayer(cluster);
-  flatGroup=L.featureGroup();
+  dotsCluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:1,spiderfyOnMaxZoom:false,disableClusteringAtZoom:18});
 }
 function render(){const cnt={public:0,private:0,nonprofit:0,unknown:0,mental:0};allH.forEach(h=>{cnt[h.t]++;if(h.m)cnt.mental++;});document.getElementById('c-all').textContent=allH.length;document.getElementById('c-public').textContent=cnt.public;document.getElementById('c-private').textContent=cnt.private;document.getElementById('c-nonprofit').textContent=cnt.nonprofit;document.getElementById('c-unknown').textContent=cnt.unknown;document.getElementById('c-mental').textContent=cnt.mental;apply();}
-function apply(){cluster.clearLayers();flatGroup.clearLayers();const target=clustered?cluster:flatGroup;allH.forEach(h=>{if(curType!=='all'&&h.t!==curType)return;if(!showM&&h.m)return;const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});if(clustered){if(map.hasLayer(flatGroup))map.removeLayer(flatGroup);if(!map.hasLayer(cluster))map.addLayer(cluster);}else{if(map.hasLayer(cluster))map.removeLayer(cluster);if(!map.hasLayer(flatGroup))map.addLayer(flatGroup);}}
+function apply(){cluster.clearLayers();dotsCluster.clearLayers();const target=clustered?cluster:dotsCluster;allH.forEach(h=>{if(curType!=='all'&&h.t!==curType)return;if(!showM&&h.m)return;const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});if(clustered){if(map.hasLayer(dotsCluster))map.removeLayer(dotsCluster);if(!map.hasLayer(cluster))map.addLayer(cluster);}else{if(map.hasLayer(cluster))map.removeLayer(cluster);if(!map.hasLayer(dotsCluster))map.addLayer(dotsCluster);}}
 function setF(t){curType=t;document.querySelectorAll('.filter-btn[data-type]').forEach(b=>{if(b.dataset.type===t)b.classList.add('active');else if(b.dataset.type!=='mental'&&b.dataset.type!=='cluster')b.classList.remove('active');});apply();}
 function togC(){clustered=!clustered;document.querySelector('.filter-btn[data-type="cluster"]').classList.toggle('active');document.querySelector('.filter-btn[data-type="cluster"]').textContent=clustered?'🗺️ Clustered':'📍 Dots';apply();}
 function togM(){showM=!showM;document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');apply();}
-document.getElementById('search-input').addEventListener('input',function(){const q=this.value.toLowerCase().trim();if(!q){apply();return;}cluster.clearLayers();flatGroup.clearLayers();const target=clustered?cluster:flatGroup;allH.filter(h=>h.n.toLowerCase().includes(q)).forEach(h=>{const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});});
+document.getElementById('search-input').addEventListener('input',function(){const q=this.value.toLowerCase().trim();if(!q){apply();return;}cluster.clearLayers();dotsCluster.clearLayers();const target=clustered?cluster:dotsCluster;allH.filter(h=>h.n.toLowerCase().includes(q)).forEach(h=>{const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});});
 init();fetchH();
 </script>
 </body>
