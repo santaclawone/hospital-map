@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UK & Ireland Hospitals Map</title>
+<title>Global Hospitals Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
@@ -15,32 +15,38 @@
   
   #controls { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(20,20,20,0.95); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; z-index: 1000; overflow-x: auto; }
   
-  .filter-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #aaa; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+  .filter-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #888; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
   .filter-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-  .filter-btn.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.3); }
-  .filter-btn[data-type="public"] { border-left: 3px solid #34C759; }
+  .filter-btn.active { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 0 10px rgba(255,255,255,0.05); }
+  .filter-btn[data-type="public"].active { border-color: #FFD60A; box-shadow: 0 0 12px rgba(255,214,10,0.15); }
+  .filter-btn[data-type="private"].active { border-color: #FF3B30; box-shadow: 0 0 12px rgba(255,59,48,0.15); }
+  .filter-btn[data-type="unknown"].active { border-color: #8E8E93; }
+  .filter-btn[data-type="mental"].active { border-color: #AF52DE; }
+  .filter-btn[data-type="all"] { border-left: 3px solid transparent; }
+  .filter-btn[data-type="public"] { border-left: 3px solid #FFD60A; color: #ccc; }
   .filter-btn[data-type="private"] { border-left: 3px solid #FF3B30; }
   .filter-btn[data-type="unknown"] { border-left: 3px solid #8E8E93; }
   .filter-btn[data-type="mental"] { border-left: 3px solid #AF52DE; }
-  
+
   .stat { color: #555; font-size: 11px; white-space: nowrap; }
 
   #loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #0f0f0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
   #loading.hidden { opacity: 0; pointer-events: none; }
-  .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #34C759; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #FFD60A; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading p { color: #888; font-size: 14px; }
   #loading .sub { color: #555; font-size: 12px; margin-top: 4px; }
   #loading .progress { color: #666; font-size: 12px; margin-top: 8px; }
 
   .hospital-popup { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  .hospital-popup h3 { margin: 0 0 4px; font-size: 15px; color: #1a1a1a; }
+  .hospital-popup h3 { margin: 0 0 4px; font-size: 15px; color: #1a1a1a; max-width: 260px; }
   .hospital-popup .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; color: #fff; margin-top: 4px; }
-  .tag.public { background: #34C759; }
+  .tag.public { background: #FFD60A; color: #1a1a1a; }
   .tag.private { background: #FF3B30; }
   .tag.unknown { background: #8E8E93; }
   .tag.mental { background: #AF52DE; }
   .hospital-popup .detail { font-size: 12px; color: #666; margin-top: 2px; }
+  .hospital-popup .flag { font-size: 14px; margin-right: 4px; }
 
   #legend { position: absolute; top: 20px; right: 20px; background: rgba(20,20,20,0.9); backdrop-filter: blur(12px); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255,255,255,0.08); z-index: 1000; font-size: 12px; min-width: 130px; }
   #legend .item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
@@ -55,16 +61,15 @@
   #search-input:focus { border-color: rgba(255,255,255,0.3); }
   #search-input::placeholder { color: #666; }
 
-  #source-badge { position: absolute; bottom: 70px; right: 16px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); border-radius: 8px; padding: 4px 10px; font-size: 10px; color: #888; z-index: 1000; }
-
   @media (max-width: 640px) {
     #title h1 { font-size: 16px; }
-    #controls { gap: 6px; padding: 8px; flex-wrap: wrap; height: auto; }
-    .filter-btn { font-size: 11px; padding: 5px 10px; }
-    #legend { top: 80px; right: 10px; padding: 10px 12px; }
-    #search { top: 70px; }
+    #controls { gap: 5px; padding: 8px; flex-wrap: wrap; height: auto; }
+    .filter-btn { font-size: 10px; padding: 5px 8px; }
+    #legend { top: 75px; right: 10px; padding: 10px 12px; font-size: 11px; }
+    #search { top: 65px; width: 200px; }
     #title { top: 10px; left: 10px; }
-    #title h1 { font-size: 16px; }
+    #title h1 { font-size: 15px; }
+    #title p { display: none; }
   }
 </style>
 </head>
@@ -72,14 +77,14 @@
 
 <div id="loading">
   <div class="spinner"></div>
-  <p>Loading hospitals from Wikidata...</p>
-  <div class="sub">Querying structured hospital data for UK & Ireland</div>
-  <div class="progress" id="load-progress">Still going...</div>
+  <p>Loading hospitals across 5 countries...</p>
+  <div class="sub">Querying Wikidata for UK, Ireland, Spain, USA & Australia</div>
+  <div class="progress" id="load-progress">Fetching data...</div>
 </div>
 
 <div id="title">
-  <h1>🏥 Hospital Map</h1>
-  <p>UK & Ireland · Public vs Private</p>
+  <h1>🏥 Global Hospital Map</h1>
+  <p>Public vs Private · 5 countries</p>
 </div>
 
 <div id="search"><input id="search-input" type="text" placeholder="Search hospitals..." /></div>
@@ -87,36 +92,40 @@
 <div id="map"></div>
 
 <div id="legend">
-  <div class="item"><div class="dot" style="background:#34C759"></div> Public</div>
+  <div class="item"><div class="dot" style="background:#FFD60A"></div> Public</div>
   <div class="item"><div class="dot" style="background:#FF3B30"></div> Private</div>
   <div class="item"><div class="dot" style="background:#8E8E93"></div> Unknown</div>
   <div class="item"><div class="dot" style="background:#AF52DE"></div> Mental health</div>
 </div>
 
-<div id="source-badge">Data: Wikidata + OSM</div>
-
 <div id="controls">
-  <button class="filter-btn active" data-type="all" onclick="filterHospitals('all')">All <span id="count-all">0</span></button>
-  <button class="filter-btn active" data-type="public" onclick="filterHospitals('public')">🟢 Public <span id="count-public">0</span></button>
-  <button class="filter-btn active" data-type="private" onclick="filterHospitals('private')">🔴 Private <span id="count-private">0</span></button>
-  <button class="filter-btn active" data-type="unknown" onclick="filterHospitals('unknown')">⚪ Unknown <span id="count-unknown">0</span></button>
+  <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All <span id="count-all">0</span></button>
+  <button class="filter-btn" data-type="public" onclick="setFilter('public')">🟡 Public <span id="count-public">0</span></button>
+  <button class="filter-btn" data-type="private" onclick="setFilter('private')">🔴 Private <span id="count-private">0</span></button>
+  <button class="filter-btn" data-type="unknown" onclick="setFilter('unknown')">⚪ Unknown <span id="count-unknown">0</span></button>
   <button class="filter-btn active" data-type="mental" onclick="toggleMental()">🧠 Mental <span id="count-mental">0</span></button>
-  <span class="stat">Source: Wikidata</span>
+  <span class="stat">Data: <span>Wikidata</span></span>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 let map, allHospitals = [], markerCluster, showMental = true;
+let currentTypeFilter = 'all';
 
 const WIKIDATA_URL = 'https://query.wikidata.org/sparql';
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
-// ── Colour helpers ──
+const COUNTRY_FLAGS = {
+  'United Kingdom': '🇬🇧', 'Ireland': '🇮🇪', 'Spain': '🇪🇸',
+  'United States': '🇺🇸', 'Australia': '🇦🇺'
+};
+
+// Country Q-IDs
+const COUNTRIES = ['wd:Q145', 'wd:Q27', 'wd:Q29', 'wd:Q30', 'wd:Q408'];
 
 function getColor(type) {
   switch(type) {
-    case 'public': return { fill: '#34C759', border: '#2DB84C' };
+    case 'public': return { fill: '#FFD60A', border: '#D4B40A' };
     case 'private': return { fill: '#FF3B30', border: '#D32F26' };
     default: return { fill: '#8E8E93', border: '#707075' };
   }
@@ -131,100 +140,130 @@ function createIcon(type, mental) {
 }
 
 function makePopup(h) {
-  let html = `<div class="hospital-popup"><h3>${h.name}</h3>`;
+  const flag = COUNTRY_FLAGS[h.countryRaw] || '';
+  let html = `<div class="hospital-popup"><h3>${flag} ${h.name}</h3>`;
   html += `<span class="tag ${h.type}">${h.type[0].toUpperCase() + h.type.slice(1)}</span>`;
   if (h.mental) html += ` <span class="tag mental">🧠 Mental Health</span>`;
-  if (h.operator) html += `<div class="detail">${h.operator}</div>`;
-  if (h.beds) html += `<div class="detail">${h.beds} beds</div>`;
+  if (h.operator) html += `<div class="detail">🏢 ${h.operator}</div>`;
+  if (h.countryRaw) html += `<div class="detail">📍 ${h.countryRaw}</div>`;
+  if (h.beds) html += `<div class="detail">🛏️ ${h.beds} beds</div>`;
   html += `</div>`;
   return html;
 }
 
 // ── Classification ──
 
-function classifyFromWikidata(name, operator, country) {
+function classify(name, operator, country) {
   const n = (name || '').toLowerCase();
   const op = (operator || '').toLowerCase();
 
-  // Known Irish public hospitals
-  const iePublic = [
-    'beaumont', 'st. james', 'mater misericordiae', 'st. vincent', 'tallaght',
-    'cork university', 'galway university', 'university hospital', 'connolly',
-    'mercy university', 'letterkenny', 'sligo university', 'waterford university',
-    'portiuncula', 'mayo university', 'naas general', 'wexford general',
-    'cavan general', 'louth county', 'our lady of lourdes', 'st. luke',
-    'bantry general', 'mallow general', 'south infirmary', 'tipperary university',
-    'midland regional', 'national maternity', 'coombe', 'rotunda',
-    'children\'s health ireland', 'temple street', 'crumlin'
-  ];
-
-  // NHS / HSE / Health Board / Trust / HSC → Public
+  // Common public signals (any country)
   if (op.includes('nhs') || op.includes('health service') || op.includes('hse') ||
       op.includes('health board') || op.includes('trust') || op.includes('hsc') ||
-      op.includes('healthcare nhs') || op.includes('foundation trust') ||
-      op.includes('health and social care') || op.includes('clinical commissioning')) {
+      op.includes('foundation trust') || op.includes('national health') ||
+      op.includes('servicio de salud') || op.includes('sistema nacional') ||
+      op.includes('ministry of health') || op.includes('department of health') ||
+      op.includes('health and social care') || op.includes('veterans affairs') ||
+      op.includes('va ') || op.includes('public health') ||
+      op.includes('county health') || op.includes('state health') ||
+      op.includes('army') || op.includes('navy') || op.includes('air force') ||
+      op.includes('military') || op.includes('government') ||
+      op.includes('department of veterans')) {
     return 'public';
   }
 
-  // Private operator signals
+  // Private signals
   if (op.includes('private') || op.includes('ltd') || op.includes('limited') ||
       op.includes('plc') || op.includes('inc.') || op.includes('corporation') ||
-      op === 'nuffield health' || op === 'spire healthcare' || op === 'hca healthcare' ||
-      op === 'circle health' || op === 'bmi healthcare' || op === 'ramsay health care' ||
-      op === 'benenden health') {
+      op.includes('hca healthcare') || op.includes('tenet') || op.includes('community health systems') ||
+      op === 'nuffield health' || op === 'spire healthcare' || op === 'circle health' ||
+      op === 'bmi healthcare' || op === 'ramsay health care' || op === 'quiron' ||
+      op === 'hospitales universitarios') {
     return 'private';
   }
 
-  // Name-based classification
+  // Name-based
   if (n.includes('nhs ')) return 'public';
-  if (n.startsWith('royal ') || n.includes('royal hospital') || n.includes('royal infirmary')) return 'public';
-  if (n.includes('private') || n.includes('independent hospital')) return 'private';
-  if (iePublic.some(k => n.includes(k))) return 'public';
-  if (n.includes('nuffield') || n.includes('spire ') || n.includes('hca ') ||
-      n.includes('bmi') || n.includes('ramsay') || n.includes('circle health') ||
-      n.includes('benenden')) return 'private';
+  if (n.startsWith('royal ') || n.includes('royal hospital') || n.includes('royal infirmary') ||
+      n.includes('university hospital') || n.includes('teaching hospital')) return 'public';
+  if (n.includes('private') || n.includes('independent hospital') || n.includes('clínica')) return 'private';
 
-  // Country-level guesses
-  if (country === 'Ireland') {
-    // Most Irish hospitals are HSE-run. Default to unknown unless we can prove it
-    return 'unknown';
+  // Irish specific
+  const iePublic = [
+    'beaumont', 'st. james', 'mater misericordiae', 'st. vincent', 'tallaght',
+    'cork university', 'galway university', 'connolly', 'mercy university',
+    'letterkenny', 'sligo university', 'waterford university', 'portiuncula',
+    'mayo university', 'naas general', 'wexford general', 'cavan general',
+    'louth county', 'our lady of lourdes', 'st. luke', 'bantry general',
+    'mallow general', 'south infirmary', 'tipperary university',
+    'midland regional', 'national maternity', 'coombe', 'rotunda',
+    'children\'s health ireland', 'temple street', 'crumlin'
+  ];
+  if (iePublic.some(k => n.includes(k))) return 'public';
+
+  // Spanish specific (mostly public by default in NHS)
+  const esPublic = [
+    'hospital universitario', 'hospital general', 'hospital clínico',
+    'hospital regional', 'hospital comarcal', 'hospital de la',
+    'hospital virgen', 'hospital san', 'hospital santa',
+    'complejo hospitalario', 'área sanitaria', 'servicio de salud'
+  ];
+  if (country === 'Spain') {
+    if (esPublic.some(k => n.includes(k))) return 'public';
+    // Most Spanish hospitals are public unless named private
+    if (!n.includes('clínica') && !n.includes('privado')) return 'public';
+  }
+
+  // Australian specific
+  const auPublic = ['royal', 'hospital', 'health service', 'health district',
+    'prince of wales', 'st george', 'westmead', 'alice springs'];
+  if (country === 'Australia' && auPublic.some(k => n.includes(k))) return 'public';
+
+  // USA - name-based public signals  
+  if (country === 'United States') {
+    if (n.includes('veterans') || n.includes('va ') || n.includes('memorial') ||
+        n.includes('county hospital') || n.includes('state hospital') ||
+        n.includes('general hospital') || n.includes('university of') ||
+        n.includes('medical center') || n.startsWith('st. ') || n.startsWith('st ')) {
+      return 'public';
+    }
   }
 
   return 'unknown';
 }
 
-function isMentalFromWD(name) {
+function isMental(name) {
   const n = (name || '').toLowerCase();
-  const keywords = ['psychiatric', 'mental health', 'mental hospital', 'psychiatry',
-    'mental health centre', 'psychiatric unit', 'mental wellness', 'behavioural health',
-    'mental', 'psychiatric hospital'];
+  const keywords = ['psychiatric', 'mental health', 'psychiatry', 'mental hospital',
+    'mental health centre', 'psychiatric unit', 'mental', 'psiquiátrico',
+    'salud mental', 'behavioural health', 'behavioral health'];
   return keywords.some(k => n.includes(k));
 }
 
 // ── Wikidata fetch ──
 
-function fetchFromWikidata() {
+function fetchHospitals() {
+  const countryList = COUNTRIES.join(', ');
   const sparql = `SELECT ?hospital ?hospitalLabel ?coord ?operatorLabel ?countryLabel ?beds WHERE {
   ?hospital wdt:P31 wd:Q16917;
             wdt:P625 ?coord;
             wdt:P17 ?country.
-  FILTER(?country IN (wd:Q145, wd:Q27))
+  FILTER(?country IN (${countryList}))
   OPTIONAL { ?hospital wdt:P137 ?operator. }
   OPTIONAL { ?hospital wdt:P1313 ?beds. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
-LIMIT 2000`;
+LIMIT 10000`;
 
-  document.getElementById('load-progress').textContent = 'Fetching hospital data from Wikidata...';
+  document.getElementById('load-progress').textContent = 'Querying Wikidata...';
 
   fetch(WIKIDATA_URL + '?format=json&query=' + encodeURIComponent(sparql), {
     headers: { 'Accept': 'application/json', 'User-Agent': 'HospitalMap/1.0' }
   })
   .then(r => r.json())
   .then(data => {
-    document.getElementById('load-progress').textContent = `Got ${data.results.bindings.length} records. Processing...`;
+    document.getElementById('load-progress').textContent = `Processing ${data.results.bindings.length} records...`;
     const parsed = data.results.bindings.map(b => {
-      // Parse "Point(lon lat)"
       const coordStr = b.coord.value;
       const match = coordStr.match(/Point\(([\d.-]+)\s+([\d.-]+)\)/);
       if (!match) return null;
@@ -233,138 +272,39 @@ LIMIT 2000`;
       if (isNaN(lat) || isNaN(lon)) return null;
       const name = b.hospitalLabel.value;
       const operator = b.operatorLabel ? b.operatorLabel.value : '';
-      const country = b.countryLabel.value;
+      const countryRaw = b.countryLabel.value;
       const beds = b.beds ? parseInt(b.beds.value) : 0;
-      const type = classifyFromWikidata(name, operator, country);
-      const mental = isMentalFromWD(name);
-      return { name, lat, lng: lon, type, mental, operator, beds, country: country === 'Ireland' ? 'ie' : 'gb', source: 'wikidata' };
+      const type = classify(name, operator, countryRaw);
+      const mental = isMental(name);
+      return { name, lat, lng: lon, type, mental, operator, beds, countryRaw };
     }).filter(Boolean);
 
-    document.getElementById('load-progress').textContent = `Wikidata: ${parsed.length} hospitals. Checking OSM for extras...`;
+    allHospitals = parsed;
 
-    // Now also fetch OSM as supplement (fills gaps for smaller clinics)
-    fetchFromOSM(parsed);
+    // Show counts by country
+    const byCountry = {};
+    parsed.forEach(h => { byCountry[h.countryRaw] = (byCountry[h.countryRaw] || 0) + 1; });
+    document.getElementById('load-progress').textContent = Object.entries(byCountry)
+      .map(([c, n]) => `${COUNTRY_FLAGS[c] || c} ${n}`).join(' · ');
+
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+      renderAll();
+    }, 500);
   })
   .catch(err => {
-    document.getElementById('load-progress').textContent = `Wikidata failed: ${err.message}. Falling back to OSM...`;
-    fetchFromOSM([]);
+    document.getElementById('load-progress').textContent = `⚠ Error: ${err.message}`;
   });
-}
-
-// ── OSM (fallback / supplement) ──
-
-function fetchFromOSM(existing) {
-  const existingMap = new Map();
-  existing.forEach(h => {
-    const key = h.name + '|' + h.lat.toFixed(2) + '|' + h.lng.toFixed(2);
-    existingMap.set(key, true);
-  });
-
-  const query = `[out:json][timeout:120][maxsize:1073741824];
-(
-  area["ISO3166-1"="GB"][admin_level=2];
-  area["ISO3166-1"="IE"][admin_level=2];
-);
-(
-  node(area)["amenity"="hospital"];
-  way(area)["amenity"="hospital"];
-  relation(area)["amenity"="hospital"];
-  node(area)["healthcare"="hospital"];
-  way(area)["healthcare"="hospital"];
-  relation(area)["healthcare"="hospital"];
-);
-out center 5000;`;
-
-  fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(query)
-  })
-  .then(r => r.json())
-  .then(data => {
-    document.getElementById('load-progress').textContent = 'Merging OSM data with Wikidata...';
-    processSupplement(data.elements, existing, existingMap);
-  })
-  .catch(() => {
-    // OSM failed, just use Wikidata alone
-    finishLoading(existing);
-  });
-}
-
-function processSupplement(elements, existing, existingMap) {
-  const seen = new Set();
-
-  elements.forEach(el => {
-    const tags = el.tags || {};
-    if (!tags.name || tags.name === 'Hospital') return;
-
-    let lat, lng;
-    if (el.type === 'node') { lat = el.lat; lng = el.lon; }
-    else if (el.center) { lat = el.center.lat; lng = el.center.lon; }
-    else return;
-
-    // Check if already in Wikidata
-    const key = tags.name + '|' + lat.toFixed(2) + '|' + lng.toFixed(2);
-    const dedupKey = tags.name + '|' + lat.toFixed(2) + '|' + lng.toFixed(2);
-    if (existingMap.has(key)) return;
-    if (seen.has(dedupKey)) return;
-    seen.add(dedupKey);
-
-    // Skip very generic names
-    if (tags.name.length < 5) return;
-
-    const h = {
-      name: tags.name,
-      lat, lng,
-      type: classifyHospital(tags),
-      mental: isMentalHealth(tags),
-      operator: tags.operator || '',
-      beds: tags.beds ? parseInt(tags.beds) : 0,
-      country: '',
-      source: 'osm'
-    };
-    existing.push(h);
-  });
-
-  finishLoading(existing);
-}
-
-// ── OSM classification helpers (reused from OSM supplement) ──
-
-function classifyHospital(tags) {
-  const t = tags['operator:type'] || '';
-  const op = (tags.operator || '').toLowerCase();
-  const name = (tags.name || '').toLowerCase();
-
-  const iePublic = ['beaumont', 'st james', 'mater','tallaght','children','cork university','galway university','university hospital','connolly','mercy','letterkenny','sligo','waterford','portiuncula','mayo university','naas general','wexford general','cavan general','louth county','our lady of lourdes','st luke','bantry','mallow','south infirmary','tipperary','midland regional'];
-
-  if (t === 'public' || t === 'government') return 'public';
-  if (t === 'private' || t === 'for-profit') return 'private';
-  if (t === 'philanthropic' || t === 'non-profit' || t === 'religious') return 'public';
-  if (op.includes('nhs') || op.includes('health service') || op.includes('hse') || op.includes('trust') || op.includes('health board')) return 'public';
-  if (op.includes('private') || op.includes('ltd') || op.includes('limited') || op.includes('plc')) return 'private';
-  if (name.includes('nhs ')) return 'public';
-  if (name.includes('private')) return 'private';
-  if (iePublic.some(k => name.includes(k))) return 'public';
-  return 'unknown';
-}
-
-function isMentalHealth(tags) {
-  const n = (tags.name || '').toLowerCase();
-  const speciality = (tags['healthcare:speciality'] || tags.healthcare_speciality || '').toLowerCase();
-  const desc = Object.values(tags).join(' ').toLowerCase();
-  const keywords = ['psychiatric', 'mental health', 'psychiatry', 'mental hospital'];
-  return keywords.some(k => n.includes(k) || speciality.includes(k) || desc.includes(k));
 }
 
 // ── Map init ──
 
 function initMap() {
   map = L.map('map', {
-    center: [54.5, -4.5],
-    zoom: 6,
-    minZoom: 5,
-    maxBounds: L.latLngBounds(L.latLng(49, -12), L.latLng(61, 3)),
+    center: [30, -30],
+    zoom: 3,
+    minZoom: 2,
+    worldCopyJump: true,
     zoomControl: false
   });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -377,15 +317,16 @@ function initMap() {
 
   markerCluster = L.markerClusterGroup({
     chunkedLoading: true,
-    maxClusterRadius: 60,
+    maxClusterRadius: 55,
     spiderfyOnMaxZoom: true,
-    disableClusteringAtZoom: 16,
+    disableClusteringAtZoom: 15,
     iconCreateFunction: function(cluster) {
       const count = cluster.getChildCount();
+      const r = Math.min(45, 24 + Math.min(count, 30) * 0.7);
       return L.divIcon({
-        html: `<div style="background:rgba(52,199,89,0.2);border:2px solid rgba(52,199,89,0.6);border-radius:50%;width:${Math.min(50, 30 + count * 2)}px;height:${Math.min(50, 30 + count * 2)}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12px;backdrop-filter:blur(4px);">${count}</div>`,
+        html: `<div style="background:rgba(255,214,10,0.15);border:2px solid rgba(255,214,10,0.5);border-radius:50%;width:${r}px;height:${r}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:${count > 99 ? 10 : 12}px;backdrop-filter:blur(4px);">${count}</div>`,
         className: '',
-        iconSize: [40, 40]
+        iconSize: [r, r]
       });
     }
   });
@@ -394,15 +335,7 @@ function initMap() {
 
 // ── Rendering ──
 
-function finishLoading(all) {
-  allHospitals = all;
-  document.getElementById('loading').classList.add('hidden');
-  renderAll();
-}
-
 function renderAll() {
-  markerCluster.clearLayers();
-
   const counts = { public: 0, private: 0, unknown: 0, mental: 0 };
   allHospitals.forEach(h => { counts[h.type]++; if (h.mental) counts.mental++; });
 
@@ -412,46 +345,44 @@ function renderAll() {
   document.getElementById('count-unknown').textContent = counts.unknown;
   document.getElementById('count-mental').textContent = counts.mental;
 
-  applyFilters();
+  applyFilter();
 }
 
-function applyFilters() {
-  const activeTypes = [];
-  document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
-    if (btn.classList.contains('active')) activeTypes.push(btn.dataset.type);
-  });
-
+function applyFilter() {
   markerCluster.clearLayers();
 
   allHospitals.forEach(h => {
+    const typeMatch = currentTypeFilter === 'all' || h.type === currentTypeFilter;
+    if (!typeMatch) return;
     if (!showMental && h.mental) return;
-    const show = activeTypes.includes('all') || activeTypes.includes(h.type);
-    if (show) {
-      const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type, h.mental) });
-      marker.bindPopup(makePopup(h));
-      markerCluster.addLayer(marker);
-    }
+
+    const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type, h.mental) });
+    marker.bindPopup(makePopup(h));
+    markerCluster.addLayer(marker);
   });
 }
 
-function filterHospitals(type) {
+function setFilter(type) {
+  currentTypeFilter = type;
+  // Update button states
   document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
-    if (btn.dataset.type === type) btn.classList.toggle('active');
+    if (btn.dataset.type === type) btn.classList.add('active');
+    else if (btn.dataset.type !== 'mental') btn.classList.remove('active');
   });
-  applyFilters();
+  applyFilter();
 }
 
 function toggleMental() {
   showMental = !showMental;
   document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');
-  applyFilters();
+  applyFilter();
 }
 
 // ── Search ──
 
 document.getElementById('search-input').addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
-  if (!q) { applyFilters(); return; }
+  if (!q) { applyFilter(); return; }
   markerCluster.clearLayers();
   allHospitals.filter(h => h.name.toLowerCase().includes(q)).forEach(h => {
     const marker = L.marker([h.lat, h.lng], { icon: createIcon(h.type, h.mental) });
@@ -463,7 +394,7 @@ document.getElementById('search-input').addEventListener('input', function() {
 // ── Start ──
 
 initMap();
-fetchFromWikidata();
+fetchHospitals();
 </script>
 </body>
 </html>
