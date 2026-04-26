@@ -169,6 +169,12 @@ const FOR_PROFIT_OPS = ['hca','hospital corporation','tenet','universal health s
   'acadia','encompass health','select medical','vibra','kindred','iasis',
   'healthsouth','surgery partners','uspi'];
 
+// ── Ireland Private Hospital Names ──
+const IE_PRIVATE=['bon secours','blackrock clinic','beacon hospital','hermitage clinic','galway clinic','upmc kildare','upmc whitfield','sports surgery clinic','aut even','barringtons'];
+
+// ── UK Private/Independent Hospital Names ──
+const UK_PRIVATE=['wellington hospital','london bridge hospital','cromwell hospital','king edward vii','portland hospital','london clinic','princess grace','st anthonys','st. anthony\'s','rivers hospital','hospital of st john','nightingale hospital marylebone','albyn hospital','carrick glen','fernbrae','kings park hospital stirling','murrayfield hospital','ross hall hospital','ulster independent clinic','fitzwilliam clinic','hillsborough clinic'];
+
 function col(t){switch(t){case'public':return'#FFD60A';case'private':return'#FF3B30';case'nonprofit':return'#5E5CE6';default:return'#8E8E93';}}
 function icon(t,m){const c=col(t);const x=m?'border:2px solid #AF52DE':`border:2px solid ${c}`;return L.divIcon({className:'',html:`<div style="width:11px;height:11px;border-radius:50%;background:${c};${x};box-shadow:0 0 5px ${c}55;"></div>`,iconSize:[11,11],iconAnchor:[6,6],popupAnchor:[0,-7]});}
 function popup(h){const f=FLAGS[h.ctry]||'';let x=`<div class="popup"><h3>${f} ${h.n}</h3><span class="tag ${h.t}">${h.t[0].toUpperCase()+h.t.slice(1)}</span>`;if(h.m)x+=` <span class="tag mental">🧠 Mental Health</span>`;if(h.op)x+=`<div class="detail">🏢 ${h.op}</div>`;if(h.ctry)x+=`<div class="detail">📍 ${h.ctry}</div>`;if(h.b)x+=`<div class="detail">🛏️ ${h.b} beds</div>`;return x+'</div>';}
@@ -182,13 +188,15 @@ function cls(name, operator, country) {
     if(n.includes('nhs '))return'public';
     const iePub=['beaumont','st. james','mater','st. vincent','tallaght','cork university','galway university','connolly','mercy university','letterkenny','sligo university','waterford university','portiuncula','mayo university','naas general','wexford general','cavan general','louth county','our lady of lourdes','st. luke','bantry','mallow','south infirmary','tipperary','midland regional','national maternity','coombe','rotunda','children\'s health ireland','temple street','crumlin'];
     if(country==='Ireland'&&iePub.some(k=>n.includes(k)))return'public';
+    if(country==='Ireland'&&IE_PRIVATE.some(k=>n.includes(k)))return'private';
     if(country==='Spain')return'public';
     if(country==='United Kingdom'&&(n.startsWith('royal ')||n.includes('royal hospital')||n.includes('royal infirmary')||n.includes('university hospital')||n.includes('teaching hospital')||n.includes('general hospital')||n.includes('district')))return'public';
+    if(country==='United Kingdom'&&UK_PRIVATE.some(k=>n.includes(k)))return'private';
   }
   // Private operators (any country)
   if(op.includes('private')||op.includes('ltd')||op.includes('limited')||op.includes('plc')||op.includes('inc.')||op.includes('corporation')||FOR_PROFIT_OPS.some(f=>op.includes(f))||op==='nuffield health'||op==='spire healthcare'||op==='circle health'||op==='bmi healthcare'||op==='ramsay health care'||op==='quiron'||op==='hospitales universitarios')return'private';
   if(n.includes('private')||n.includes('clínica'))return'private';
-  if(country==='United Kingdom'&&(n.includes('nuffield')||n.includes('spire ')||n.includes('bmi')||n.includes('ramsay')||n.includes('circle health')))return'private';
+  if(country==='United Kingdom'&&(n.includes('nuffield')||n.includes('spire ')||n.includes('bmi')||n.includes('ramsay')||n.includes('circle health')||n.includes('priory')))return'private';
   // USA
   if(country==='United States'){
     if(US_PUB_NAME.some(k=>n.includes(k)))return'public';
