@@ -90,12 +90,13 @@
   <button class="filter-btn" data-type="private" onclick="setF('private')">🔴 Private <span id="c-private">0</span></button>
   <button class="filter-btn" data-type="unknown" onclick="setF('unknown')">⚪ Unknown <span id="c-unknown">0</span></button>
   <button class="filter-btn active" data-type="mental" onclick="togM()">🧠 Mental <span id="c-mental">0</span></button>
+  <button class="filter-btn active" data-type="cluster" onclick="togC()">🗺️ Clustered</button>
   <span class="stat">via Wikidata · Data quality ⚠ name-based</span>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
-let map, allH=[], cluster, showM=true, curType='all';
+let map, allH=[], cluster, flatGroup, showM=true, curType='all', clustered=true;
 const WD='https://query.wikidata.org/sparql';
 const COUNTRIES=['wd:Q145','wd:Q27','wd:Q29','wd:Q30','wd:Q408','wd:Q142','wd:Q183','wd:Q45','wd:Q298'];
 const FLAGS={'United Kingdom':'🇬🇧','Ireland':'🇮🇪','Spain':'🇪🇸','United States':'🇺🇸','Australia':'🇦🇺','France':'🇫🇷','Germany':'🇩🇪','Portugal':'🇵🇹','Chile':'🇨🇱'};
@@ -284,12 +285,14 @@ function init(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href=\"https://www.openstreetmap.org/copyright\">OSM</a> &copy; <a href=\"https://carto.com/\">CARTO</a>',subdomains:'abcd',maxZoom:19}).addTo(map);
   cluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,spiderfyOnMaxZoom:true,disableClusteringAtZoom:15,iconCreateFunction:function(c){const n=c.getChildCount(),r=Math.min(40,20+Math.min(n,25)*0.8);return L.divIcon({html:`<div style="background:rgba(255,214,10,0.1);border:2px solid rgba(255,214,10,0.35);border-radius:50%;width:${r}px;height:${r}px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:${n>99?9:11}px;backdrop-filter:blur(4px);">${n}</div>`,className:'',iconSize:[r,r]});}});
   map.addLayer(cluster);
+  flatGroup=L.featureGroup();
 }
 function render(){const cnt={public:0,private:0,nonprofit:0,unknown:0,mental:0};allH.forEach(h=>{cnt[h.t]++;if(h.m)cnt.mental++;});document.getElementById('c-all').textContent=allH.length;document.getElementById('c-public').textContent=cnt.public;document.getElementById('c-private').textContent=cnt.private;document.getElementById('c-nonprofit').textContent=cnt.nonprofit;document.getElementById('c-unknown').textContent=cnt.unknown;document.getElementById('c-mental').textContent=cnt.mental;apply();}
-function apply(){cluster.clearLayers();allH.forEach(h=>{if(curType!=='all'&&h.t!==curType)return;if(!showM&&h.m)return;const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));cluster.addLayer(m);});}
-function setF(t){curType=t;document.querySelectorAll('.filter-btn[data-type]').forEach(b=>{if(b.dataset.type===t)b.classList.add('active');else if(b.dataset.type!=='mental')b.classList.remove('active');});apply();}
+function apply(){cluster.clearLayers();flatGroup.clearLayers();const target=clustered?cluster:flatGroup;allH.forEach(h=>{if(curType!=='all'&&h.t!==curType)return;if(!showM&&h.m)return;const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});if(clustered){if(map.hasLayer(flatGroup))map.removeLayer(flatGroup);if(!map.hasLayer(cluster))map.addLayer(cluster);}else{if(map.hasLayer(cluster))map.removeLayer(cluster);if(!map.hasLayer(flatGroup))map.addLayer(flatGroup);}}
+function setF(t){curType=t;document.querySelectorAll('.filter-btn[data-type]').forEach(b=>{if(b.dataset.type===t)b.classList.add('active');else if(b.dataset.type!=='mental'&&b.dataset.type!=='cluster')b.classList.remove('active');});apply();}
+function togC(){clustered=!clustered;document.querySelector('.filter-btn[data-type="cluster"]').classList.toggle('active');document.querySelector('.filter-btn[data-type="cluster"]').textContent=clustered?'🗺️ Clustered':'📍 Dots';apply();}
 function togM(){showM=!showM;document.querySelector('.filter-btn[data-type="mental"]').classList.toggle('active');apply();}
-document.getElementById('search-input').addEventListener('input',function(){const q=this.value.toLowerCase().trim();if(!q){apply();return;}cluster.clearLayers();allH.filter(h=>h.n.toLowerCase().includes(q)).forEach(h=>{const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));cluster.addLayer(m);});});
+document.getElementById('search-input').addEventListener('input',function(){const q=this.value.toLowerCase().trim();if(!q){apply();return;}cluster.clearLayers();flatGroup.clearLayers();const target=clustered?cluster:flatGroup;allH.filter(h=>h.n.toLowerCase().includes(q)).forEach(h=>{const m=L.marker([h.lat,h.lng],{icon:icon(h.t,h.m)});m.bindPopup(popup(h));target.addLayer(m);});});
 init();fetchH();
 </script>
 </body>
