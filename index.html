@@ -70,7 +70,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p>Loading 5,500+ hospitals worldwide...</p>
-  <div class="sub">UK · Ireland · Spain · France · Germany · Portugal · USA · Australia · Chile</div>
+  <div class="sub">UK · Ireland · Spain · France · Germany · Italy · Switzerland · Portugal · Netherlands · Canada · USA · Australia · Chile</div>
   <div class="progress" id="load-progress">Querying Wikidata...</div>
 </div>
 <div id="title"><h1>🏥 Hospital Map</h1><p>Public · Non-Profit · Private</p></div>
@@ -227,6 +227,14 @@ function cls(name, operator, country) {
       if(n.includes('hospital clínico')||n.includes('hospital regional')||n.includes('servicio de salud')||n.includes('hospital de niños')||n.includes('hospital de la fuerza')||n.includes('hospital militar')||n.includes('hospital naval')||n.includes('hospital de carabineros'))return'public';
       if(n.includes('clínica')||n.includes('clinica alemana')||n.includes('clinica las condes'))return'private';
     }
+    // Canada — provincial health authorities run most
+    if(country==='Canada'&&(op.includes('health authority')||op.includes('health region')||op.includes('santé')||op.includes('alberta health services')||op.includes('ontario health')||op.includes('quebec ministry')))return'public';
+    // Netherlands — UMC/STZ = public academic
+    if(country==='Netherlands'&&(op.includes('umc')||op.includes('ziekenhuis')||op.includes('stichting')))return'public';
+    // Italy — SSN public: Azienda Ospedaliera, ASL, IRCCS public
+    if(country==='Italy'&&(op.includes('azienda ospedaliera')||op.includes('asl')||op.includes('azienda sanitaria')||op.includes('ssn')||op.includes('servizio sanitario')))return'public';
+    // Switzerland — cantonal operators = public
+    if(country==='Switzerland'&&(op.includes('canton')||op.includes('kanton')||op.includes('etat')||op.includes('république')))return'public';
   }
   // Private operators (any country)
   if(op.includes('private')||op.includes('ltd')||op.includes('limited')||op.includes('plc')||op.includes('inc.')||op.includes('corporation')||FOR_PROFIT_OPS.some(f=>op.includes(f))||op==='nuffield health'||op==='spire healthcare'||op==='circle health'||op==='bmi healthcare'||op==='ramsay health care'||op==='quiron'||op==='hospitales universitarios'||FR_PRIVATE_OP.some(k=>op.includes(k))||DE_PRIVATE_OP.some(k=>op.includes(k))||CL_PRIVATE_OP.some(k=>op.includes(k))||PT_PRIVATE_OP.some(k=>op.includes(k)))return'private';
@@ -251,6 +259,10 @@ function cls(name, operator, country) {
   if(country==='Germany'){if(DE_PRIVATE.some(k=>n.includes(k)))return'private';return'public';}
   if(country==='Portugal'){if(PT_PRIVATE.some(k=>n.includes(k)))return'private';return'public';}
   if(country==='Chile'){if(n.includes('clínica'))return'private';return'public';}
+  if(country==='Canada'){if(n.includes('private')||n.includes('ltd')||n.includes('inc.'))return'private';return'public';}
+  if(country==='Netherlands'){if(n.includes('privé')||n.includes('particulier'))return'private';return'public';}
+  if(country==='Italy'){if(n.includes('humanitas')||n.includes('san raffaele')||n.includes('san donato')||n.includes('galeazzi'))return'private';return'public';}
+  if(country==='Switzerland'){if(n.includes('privatklinik')||n.includes('hirslanden'))return'private';return'public';}
   return'unknown';
 }
 function mental(n){const k=['psychiatric','mental health','psychiatry','mental hospital','psiquiátrico','salud mental','behavioural health','behavioral health','psychiatric hospital'];return k.some(s=>n.toLowerCase().includes(s));}
